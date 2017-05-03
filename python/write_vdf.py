@@ -5,10 +5,8 @@
 
     example:  python3 write_vdf.py TABS output.nc
 '''
-import glob
 from netCDF4 import Dataset
 import numpy as np
-import pdb
 import argparse
 import textwrap
 import sys
