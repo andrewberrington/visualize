@@ -5,6 +5,7 @@
 
     example:  python3 write_vdf.py TABS output.nc
 '''
+
 from netCDF4 import Dataset
 import numpy as np
 import argparse
@@ -18,6 +19,7 @@ def write_error(nc_in):
         if len(var.shape) == 4:
             namelist.append(name)
     return namelist
+
 
 
 def dump_bin(ncfiles, varname):
@@ -51,14 +53,15 @@ def dump_bin(ncfiles, varname):
             print('writing an array of {}(x,y,z) shape {}x{}x{}'.format(
                 varname, *var_data.shape))
             fp = np.memmap(out_name, dtype=np.float32, mode='w+',
-                           shape=[len(ncfiles), var_data.shape])
+                           shape=(len(ncfiles), var_data.shape))
             fp[...] = var_data[...]
     del fp
     return out_name, string_shape
 
 listfiles = ('BOMEX_256x256x128_25m_25m_1s_16_0000018000.nc',
              'BOMEX_256x256x128_25m_25m_1s_16_0000018060.nc')
-test = dump_bin(listfiles, varname)
+
+# test = dump_bin(listfiles, varname)
 
 
 def dump_script(varname, rev_shape):
