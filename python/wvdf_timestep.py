@@ -28,6 +28,7 @@ def dump_bin(filename, varname, outname):
     with open(filename, 'r') as f:
         ncfiles = json.load(f)
     num_ts = len(ncfiles)
+    
     # to get the x, y, z dimensions of the files (only use the first ncdf file)
     with Dataset(ncfiles[0], 'r') as nc_in:
         xvals = nc_in.variables['x'][:] * meters2km
@@ -42,6 +43,9 @@ def dump_bin(filename, varname, outname):
                 outfile.write('{:6.3f}\n'.format(vals[-1]))
     # create new shape with num_ts at front
     the_shape = (num_ts, len(zvals), len(yvals), len(xvals))
+    vdfcreate='/Applications/VAPOR/VAPOR.app/Contents/MacOS/vdfcreate'
+    thecmd=f'{vdfcreate} -xcoords xvals.txt -ycoords yvals.txt -zcoords zvals.txt \
+           -gridtype stretched -dimension {len(the_shape)} -vars3d {varname} -numts {num_ts} {outn:s}.vdf
     print(the_shape)
     out_name = '{}.bin'.format(outname)
     print(np.shape(fp))
@@ -73,8 +77,7 @@ def dump_script(varname, rev_shape, outname, num_ts):
     command = r"""
         #!/bin/bash -v
         . /Applications/VAPOR/VAPOR.app/Contents/MacOS/vapor-setup.sh
-        vdfcreate -xcoords xvals.txt -ycoords yvals.txt -zcoords zvals.txt \
-           -gridtype stretched -dimension {dim:s} -vars3d {var:s} -numts {num_ts:s} {outn:s}.vdf
+        
 
         raw2vdf -varname {var:s} -ts {num_ts:s} {outn:s}.vdf {outn:s}.bin
     """
