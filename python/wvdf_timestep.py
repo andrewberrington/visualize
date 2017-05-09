@@ -43,12 +43,12 @@ def dump_bin(filename, varname, outname):
                 outfile.write('{:6.3f}\n'.format(vals[-1]))
     # create new shape with num_ts at front
     the_shape = (num_ts, len(zvals), len(yvals), len(xvals))
-    vdfcreate='/Applications/VAPOR/VAPOR.app/Contents/MacOS/vdfcreate'
-    thecmd=f'{vdfcreate} -xcoords xvals.txt -ycoords yvals.txt -zcoords zvals.txt \
-           -gridtype stretched -dimension {len(the_shape)} -vars3d {varname} -numts {num_ts} {outn:s}.vdf
+    vdfcreate = '/Applications/VAPOR/VAPOR.app/Contents/MacOS/vdfcreate'
+    thecmd = f'{vdfcreate} -xcoords xvals.txt -ycoords yvals.txt -zcoords zvals.txt \
+             -gridtype stretched -dimension {len(the_shape)} -vars3d {varname} -numts {num_ts} {outn:s}.vdf'
+    status, output = subprocess.getstatusoutput(thecmd)
     print(the_shape)
     out_name = '{}.bin'.format(outname)
-    print(np.shape(fp))
     print('writing an array of {}(t,x,y,z) shape {}x{}x{}x{}'.format(varname, *the_shape))
     for t_step, ncfile in enumerate(ncfiles):
         with Dataset(ncfile, 'r') as nc_in:
@@ -61,14 +61,14 @@ def dump_bin(filename, varname, outname):
             except KeyError:
                 print('variable names are: ', write_error(nc_in))
                 sys.exit(1)
-            tmpname='temp.bin'
+            tmpname = 'temp.bin'
             fp = np.memmap(tmpname, dtype=np.float32, mode='w+',
                            shape=the_shape)
             fp[t_step, ...] = var_data[...]
             print(np.shape(fp))
             del fp
-            thecmd=f'raw2vdf -varname {varname} -ts {t_step:d} {outname}.vdf {tmpname}'
-            status output subprocess.getstatusoutput(thecmd)
+            thecmd = f'raw2vdf -varname {varname} -ts {t_step:d} {outname}.vdf {tmpname}'
+            status, output = subprocess.getstatusoutput(thecmd)
             return out_name, string_shape
 
 
