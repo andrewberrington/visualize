@@ -3,23 +3,18 @@ import glob
 import argparse
 
 def main():
-    firsttime = False
-    if firsttime:
-        # if system is mac
-        if args.os == 'mac':
-            empty_dict = {'vdfcreate': '/Applications/VAPOR/VAPOR.app/Contents/MacOS/vdfcreate',
-                          'raw2vdf': '/Applications/VAPOR/VAPOR.app/Contents/MacOS/raw2vdf'}
-            with open(f'{args.json_name}.json', 'w') as f:
-                json.dump(empty_dict, f, indent=4)
-        # if system is linux
-        else:
-            empty_dict = {'vdfcreate': '/usr/local/vaporapp/vapor-2.6.0/bin/vdfcreate',
-                          'raw2vdf': '/usr/local/vaporapp/vapor-2.6.0/bin/raw2vdf'}
-            with open(f'{args.json_name}.json', 'w') as f:
-                json.dump(empty_dict, f, indent=4)
-    else:
+    try:
         with open(f'{args.json_name}.json', 'r') as f:
             the_dict = json.load(f)
+    except:
+        if args.os == 'mac':
+            the_dict = {'vdfcreate': '/Applications/VAPOR/VAPOR.app/Contents/MacOS/vdfcreate',
+                          'raw2vdf': '/Applications/VAPOR/VAPOR.app/Contents/MacOS/raw2vdf'}
+        else:
+            the_dict = {'vdfcreate': '/usr/local/vaporapp/vapor-2.6.0/bin/vdfcreate',
+                          'raw2vdf': '/usr/local/vaporapp/vapor-2.6.0/bin/raw2vdf'}
+        with open(f'{args.json_name}.json', 'w') as f:
+            json.dump(the_dict, f, indent=4)
 
     filelist = sorted(glob.glob(f'{args.filedir}/*.nc'))
     the_dict['filenames'] = filelist
