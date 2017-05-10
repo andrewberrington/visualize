@@ -3,7 +3,7 @@
     and write out a script that will turn that file into
     vapor vdf
 
-    example:  python3 wvdf_names.py TABS vdf_name output.nc
+    example:  python wvdf_timestep.py meta.json variable_name vdf_name
 '''
 from netCDF4 import Dataset
 import numpy as np
@@ -44,7 +44,7 @@ def dump_bin(filename, varname, outname):
                 outfile.write('{:6.3f}\n'.format(vals[-1]))
     # create new shape with num_ts at front
     lenx, leny, lenz = len(xvals), len(yvals), len(zvals)
-    the_shape = (num_ts, lenz, leny, lenx)
+    the_shape = (num_ts, lenx, leny, lenz)
     string_shape = f'{lenx}x{leny}x{lenz}'
     vdfcreate = '/Applications/VAPOR/VAPOR.app/Contents/MacOS/vdfcreate'
     thecmd = f'{vdfcreate} -xcoords xvals.txt -ycoords yvals.txt -zcoords zvals.txt \
@@ -55,7 +55,6 @@ def dump_bin(filename, varname, outname):
     print(the_shape)
     out_name = '{}.bin'.format(outname)
     print('writing an array of {}(t,x,y,z) shape {}x{}x{}x{}'.format(varname, *the_shape))
-    sys.exit(0)
     for t_step, ncfile in enumerate(ncfiles['filenames']):
         with Dataset(ncfile, 'r') as nc_in:
             try:
@@ -68,37 +67,19 @@ def dump_bin(filename, varname, outname):
                 print('variable names are: ', write_error(nc_in))
                 sys.exit(1)
             tmpname = 'temp.bin'
-            
             fp = np.memmap(tmpname, dtype=np.float32, mode='w+',
                            shape=var_data.shape)
-            fp[t_step, ...] = var_data[...]
+            fp[...] = var_data[...]
+            # fp[t_step, ...] = var_data[...]
             print(np.shape(fp))
             del fp
             raw2vdf = '/Applications/VAPOR/VAPOR.app/Contents/MacOS/raw2vdf'
             thecmd = f'{raw2vdf} -varname {varname} -ts {t_step:d} {outname}.vdf {tmpname}'
-            thecmd = f'ls -l {outname}.vdf'
-            thecmd = 'pwd ; ls *'
+            # thecmd = f'ls -l {outname}.vdf'
+            # thecmd = 'pwd ; ls *'
             status2, output2 = subprocess.getstatusoutput(thecmd)
             print(status2, output2)
-            return out_name, string_shape
-
-
-# def dump_script(varname, rev_shape, outname, num_ts):
-#     # create a loop here to put multiple timesteps into the outputted vdf file
-#     command = r"""
-#         #!/bin/bash -v
-#         . /Applications/VAPOR/VAPOR.app/Contents/MacOS/vapor-setup.sh
-        
-
-#         raw2vdf -varname {var:s} -ts {num_ts:s} {outn:s}.vdf {outn:s}.bin
-#     """
-
-#     vars = dict(var=varname, dim=rev_shape, outn=outname, num_ts=num_ts)
-#     out = textwrap.dedent(command.format_map(vars)).strip()
-#     with open('doit.sh', 'w') as script:
-#         script.write(out)
-#     print(out)
-
+    return out_name, string_shape
 
 if __name__ == "__main__":
     linebreaks = argparse.RawTextHelpFormatter
