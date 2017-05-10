@@ -46,7 +46,7 @@ def dump_bin(filename, varname, outname):
     lenx, leny, lenz = len(xvals), len(yvals), len(zvals)
     the_shape = (num_ts, lenx, leny, lenz)
     string_shape = f'{lenx}x{leny}x{lenz}'
-    vdfcreate = '/Applications/VAPOR/VAPOR.app/Contents/MacOS/vdfcreate'
+    vdfcreate = ncfiles['vdfcreate']
     thecmd = f'{vdfcreate} -xcoords xvals.txt -ycoords yvals.txt -zcoords zvals.txt \
              -gridtype stretched -dimension {string_shape} -vars3d {varname} -numts {num_ts} {outname}.vdf'
     print('debug', thecmd)
@@ -73,7 +73,7 @@ def dump_bin(filename, varname, outname):
             # fp[t_step, ...] = var_data[...]
             print(np.shape(fp))
             del fp
-            raw2vdf = '/Applications/VAPOR/VAPOR.app/Contents/MacOS/raw2vdf'
+            raw2vdf = ncfiles['raw2vdf']
             thecmd = f'{raw2vdf} -varname {varname} -ts {t_step:d} {outname}.vdf {tmpname}'
             # thecmd = f'ls -l {outname}.vdf'
             # thecmd = 'pwd ; ls *'
