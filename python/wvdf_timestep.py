@@ -3,12 +3,11 @@
     and write out a script that will turn that file into
     vapor vdf
 
-    example:  python wvdf_timestep.py meta.json variable_name vdf_name
+    example:  python wvdf_timestep.py bomex variable_name vdf_name
 '''
 from netCDF4 import Dataset
 import numpy as np
 import argparse
-# import textwrap
 import sys
 import json
 import subprocess
@@ -21,7 +20,6 @@ def write_error(nc_in):
             namelist.append(name)
     return namelist
 
-# filenames = glob.glob('cloudtracker/cloudtracker*.nc')
 
 def dump_bin(filename, varname, outname):
     meters2km = 1.e-3
@@ -30,7 +28,6 @@ def dump_bin(filename, varname, outname):
         ncfiles = json.load(f)
     num_ts = len(ncfiles['filenames'])
     print(num_ts)
-    # to get the x, y, z dimensions of the files (only use the first ncdf file)
     with Dataset(ncfiles['filenames'][0], 'r') as nc_in:
         xvals = nc_in.variables['x'][:] * meters2km
         yvals = nc_in.variables['y'][:] * meters2km
@@ -42,7 +39,6 @@ def dump_bin(filename, varname, outname):
                 [outfile.write('{:6.3f} '.format(item))
                  for item in vals[:-1]]
                 outfile.write('{:6.3f}\n'.format(vals[-1]))
-    # create new shape with num_ts at front
     lenx, leny, lenz = len(xvals), len(yvals), len(zvals)
     the_shape = (num_ts, lenx, leny, lenz)
     string_shape = f'{lenx}x{leny}x{lenz}'
@@ -59,7 +55,6 @@ def dump_bin(filename, varname, outname):
         with Dataset(ncfile, 'r') as nc_in:
             try:
                 var_data = nc_in.variables[varname][...]
-                # remember to put args.varname back in above
                 print(var_data.shape)
                 rev_shape = (var_data.shape[::-1])
                 string_shape = "{}x{}x{}".format(*rev_shape)
@@ -70,29 +65,21 @@ def dump_bin(filename, varname, outname):
             fp = np.memmap(tmpname, dtype=np.float32, mode='w+',
                            shape=var_data.shape)
             fp[...] = var_data[...]
-            # fp[t_step, ...] = var_data[...]
             print(np.shape(fp))
             del fp
             raw2vdf = ncfiles['raw2vdf']
             thecmd = f'{raw2vdf} -varname {varname} -ts {t_step:d} {outname}.vdf {tmpname}'
-            # thecmd = f'ls -l {outname}.vdf'
-            # thecmd = 'pwd ; ls *'
             status2, output2 = subprocess.getstatusoutput(thecmd)
             print(status2, output2)
     return out_name, string_shape
 
 if __name__ == "__main__":
     linebreaks = argparse.RawTextHelpFormatter
-    descrip = globals()['__doc__']
+    descrip = __doc__.lstrip()
     parser = argparse.ArgumentParser(description=descrip,
                                      formatter_class=linebreaks)
-    parser.add_argument('cloud_json', help='json file with list of nc files')
-    parser.add_argument('varname', help='name of netcdf 3d variable')
-    # added new argument outname for the outputted vdf file
-    # pass this argument into the appropriate locations of the
-    # dump_script and dump_bin functions
-    parser.add_argument('outname', help='name of the outputted vdf file')
-    # parser.add_argument('num_ts', help='number of timesteps')
+    parser.add_argument('cloud_json', help='json file with list of nc files', required=True)
+    parser.add_argument('varname', help='name of netcdf 3d variable', required=True)
+    parser.add_argument('outname', help='name of the outputted vdf file', required=True)
     args = parser.parse_args()
     binfile, rev_shape = dump_bin(args.cloud_json, args.varname, args.outname)
-    # dump_script(args.varname, rev_shape, args.outname, args.num_ts)
