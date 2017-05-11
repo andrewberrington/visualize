@@ -3,7 +3,7 @@
     and write out a script that will turn that file into
     vapor vdf
 
-    example:  python wvdf_timestep.py bomex variable_name vdf_name
+    example:  python wvdf_timestep.py -json bomex -v variable_name -o vdf_name
 '''
 from netCDF4 import Dataset
 import numpy as np

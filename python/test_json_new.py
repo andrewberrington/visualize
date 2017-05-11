@@ -3,7 +3,7 @@
     raw2vdf command line tools from VAPOR as well as the names of the netcdf files
     to be passed to wvdf_timestep.py
 
-    example:  python test_json_new.py mac path_to_nc bomex
+    example:  python test_json_new.py -os mac -dir path_to_nc -j bomex
 '''
 
 import json
