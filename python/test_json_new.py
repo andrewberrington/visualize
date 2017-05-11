@@ -35,9 +35,9 @@ if __name__ == "__main__":
     descrip = __doc__.lstrip()
     parser = argparse.ArgumentParser(description=descrip,
                                      formatter_class=linebreaks)
-    parser.add_argument('-os', '--op_sys', help='operating system (eg. linux, mac)', required=True)
-    parser.add_argument('-dir', '--filedir', help='path to directory with netcdf files', required=True)
-    parser.add_argument('-j', '--json_name', help='name of outputted json file', required=True)
+    parser.add_argument('-os', '--op_sys', dest='os', help='operating system (eg. linux, mac)', required=True)
+    parser.add_argument('-dir', '--filedir', dest='filedir', help='path to directory with netcdf files', required=True)
+    parser.add_argument('-j', '--json_name', dest='json_name', help='name of outputted json file', required=True)
     args = parser.parse_args()
     main(args)
     print(args)

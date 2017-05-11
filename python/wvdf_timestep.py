@@ -75,8 +75,8 @@ if __name__ == "__main__":
     descrip = __doc__.lstrip()
     parser = argparse.ArgumentParser(description=descrip,
                                      formatter_class=linebreaks)
-    parser.add_argument('-json', '--cloud_json', help='json file with list of nc files', required=True)
-    parser.add_argument('-v', '--varname', help='name of netcdf 3d variable', required=True)
-    parser.add_argument('-o', '--outname', help='name of the outputted vdf file', required=True)
+    parser.add_argument('-json', '--cloud_json', dest='cloud_json', help='json file with list of nc files', required=True)
+    parser.add_argument('-v', '--varname', dest='varname', help='name of netcdf 3d variable', required=True)
+    parser.add_argument('-o', '--outname', dest='outname', help='name of the outputted vdf file', required=True)
     args = parser.parse_args()
     binfile, rev_shape = dump_bin(args.cloud_json, args.varname, args.outname)
