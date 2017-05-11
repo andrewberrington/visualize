@@ -65,6 +65,7 @@ def dump_bin(filename, varname, outname):
             raw2vdf = ncfiles['raw2vdf']
             thecmd = f'{raw2vdf} -varname {varname} -ts {t_step:d} {outname}.vdf {tmpname}'
             status2, output2 = subprocess.getstatusoutput(thecmd)
+            print(status2, output2)
     return out_name, string_shape
 
 if __name__ == "__main__":
