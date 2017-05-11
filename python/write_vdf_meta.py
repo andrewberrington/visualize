@@ -3,7 +3,7 @@
     raw2vdf command line tools from VAPOR as well as the names of the netcdf files
     to be passed to wvdf_timestep.py
 
-    example:  python test_json_new.py -os mac -dir path_to_nc -j bomex
+    example:  python write_vdf_meta.py -os linux -dir /media/loh -j cloudtrack
 '''
 
 import json
@@ -40,4 +40,3 @@ if __name__ == "__main__":
     parser.add_argument('-j', '--json_name', dest='json_name', help='name of outputted json file', required=True)
     args = parser.parse_args()
     main(args)
-    print(args)

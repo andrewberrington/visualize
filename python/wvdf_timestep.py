@@ -3,7 +3,7 @@
     and write out a script that will turn that file into
     vapor vdf
 
-    example:  python wvdf_timestep.py -json bomex -v variable_name -o vdf_name
+    example:  python wvdf_timestep.py -json cloudtrack.json -v core -o core_ts
 '''
 from netCDF4 import Dataset
 import numpy as np
@@ -44,9 +44,7 @@ def dump_bin(filename, varname, outname):
     vdfcreate = ncfiles['vdfcreate']
     thecmd = f'{vdfcreate} -xcoords xvals.txt -ycoords yvals.txt -zcoords zvals.txt \
              -gridtype stretched -dimension {string_shape} -vars3d {varname} -numts {num_ts} {outname}.vdf'
-    print('debug', thecmd)
     status1, output1 = subprocess.getstatusoutput(thecmd)
-    print(status1, output1)
     out_name = '{}.bin'.format(outname)
     print('writing an array of {}(t,x,y,z) shape {}x{}x{}x{}'.format(varname, *the_shape))
     for t_step, ncfile in enumerate(ncfiles['filenames']):
@@ -67,7 +65,6 @@ def dump_bin(filename, varname, outname):
             raw2vdf = ncfiles['raw2vdf']
             thecmd = f'{raw2vdf} -varname {varname} -ts {t_step:d} {outname}.vdf {tmpname}'
             status2, output2 = subprocess.getstatusoutput(thecmd)
-            print(status2, output2)
     return out_name, string_shape
 
 if __name__ == "__main__":
