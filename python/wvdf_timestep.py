@@ -27,7 +27,6 @@ def dump_bin(filename, varname, outname):
     with open(filename, 'r') as f:
         ncfiles = json.load(f)
     num_ts = len(ncfiles['filenames'])
-    print(num_ts)
     with Dataset(ncfiles['filenames'][0], 'r') as nc_in:
         xvals = nc_in.variables['x'][:] * meters2km
         yvals = nc_in.variables['y'][:] * meters2km
@@ -48,7 +47,6 @@ def dump_bin(filename, varname, outname):
     print('debug', thecmd)
     status1, output1 = subprocess.getstatusoutput(thecmd)
     print(status1, output1)
-    print(the_shape)
     out_name = '{}.bin'.format(outname)
     print('writing an array of {}(t,x,y,z) shape {}x{}x{}x{}'.format(varname, *the_shape))
     for t_step, ncfile in enumerate(ncfiles['filenames']):
@@ -65,7 +63,6 @@ def dump_bin(filename, varname, outname):
             fp = np.memmap(tmpname, dtype=np.float32, mode='w+',
                            shape=var_data.shape)
             fp[...] = var_data[...]
-            print(np.shape(fp))
             del fp
             raw2vdf = ncfiles['raw2vdf']
             thecmd = f'{raw2vdf} -varname {varname} -ts {t_step:d} {outname}.vdf {tmpname}'
@@ -78,8 +75,8 @@ if __name__ == "__main__":
     descrip = __doc__.lstrip()
     parser = argparse.ArgumentParser(description=descrip,
                                      formatter_class=linebreaks)
-    parser.add_argument('cloud_json', help='json file with list of nc files', required=True)
-    parser.add_argument('varname', help='name of netcdf 3d variable', required=True)
-    parser.add_argument('outname', help='name of the outputted vdf file', required=True)
+    parser.add_argument('-json', '--cloud_json', help='json file with list of nc files', required=True)
+    parser.add_argument('-v', '--varname', help='name of netcdf 3d variable', required=True)
+    parser.add_argument('-o', '--outname', help='name of the outputted vdf file', required=True)
     args = parser.parse_args()
     binfile, rev_shape = dump_bin(args.cloud_json, args.varname, args.outname)
