@@ -69,11 +69,14 @@ def generate_tracking(time, file):
         ds['plume'] = xr.DataArray(tr_field > 
                        np.max(np.array([tr_mean + tr_stdev, tr_min]), 0)[:, None, None],
                        dims=['z', 'y', 'x']
+
+        meanU = np.mean(u_field, axis=(1,2))
+        meanV = np.mean(v_field, axis=(1,2))
         
         # put only the velocities into dataset where there is condensation
-        # otherwise, set velocities to 0
-        ds['u'] = np.where(ds['condensed'] > 0, 0, 1) * u_field
-        ds['v'] = np.where(ds['condensed'] > 0, 0, 1) * v_field
+        # otherwise, set velocities to 0, also subtract mean U and V values
+        ds['u'] = np.where(ds['condensed'] > 0, 0, 1) * (u_field - meanU)
+        ds['v'] = np.where(ds['condensed'] > 0, 0, 1) * (v_field - meanV)
         ds['w'] = np.where(ds['condensed'] > 0, 0, 1) * w_field
 
         ds.to_netcdf(f'data/cloudtracker_input_{time:08g}.nc')
