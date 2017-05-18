@@ -37,10 +37,10 @@ def generate_tracking(time, file):
         w_field = (w_field + np.roll(w_field, 1, axis=0)) / 2
 
         u_field = f['U'][:]
-        w_field = (w_field + np.roll(u_field, 1, axis=1)) / 2
+        u_field = (u_field + np.roll(u_field, 1, axis=1)) / 2
 
         v_field = f['V'][:]
-        w_field = (w_field + np.roll(v_field, 1, axis=2)) / 2
+        v_field = (v_field + np.roll(v_field, 1, axis=2)) / 2
 
         print("\t Calculating buoynacy fields...")
         qn_field = f['QN'][:] / 1e3
