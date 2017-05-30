@@ -1,8 +1,8 @@
 '''
-    convert an LES netcdf file to a raw binary file for vapor
+    convert an LES netcdf or zarr file to a raw binary file for vapor
     and write out a script that will turn that file into
-    vapor vdf
-    example:  python wvdf_timestep.py -json cloudtrack.json -v core -o core_ts
+    vapor vdf (uses parquet files to establish the domain)
+    example:  python wvdf_timestep_pq.py -json BOMEX_indiv.json -v core -o core_ID
 '''
 from netCDF4 import Dataset
 import pyarrow.parquet as pq

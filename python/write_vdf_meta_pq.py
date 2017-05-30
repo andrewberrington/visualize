@@ -2,7 +2,7 @@
     create and populate a json file containing the paths to the vdfcreate and
     raw2vdf command line tools from VAPOR as well as the names of the parquet files
     to be passed to wvdf_timestep_pq.py
-    example:  python write_vdf_meta.py -os linux -dir /media/loh -j cloudtrack
+    example:  python write_vdf_meta_pq.py -os linux -dir /media/loh -j BOMEX_indiv
 '''
 
 import json
