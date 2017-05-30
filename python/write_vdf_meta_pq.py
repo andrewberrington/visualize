@@ -2,13 +2,12 @@
     create and populate a json file containing the paths to the vdfcreate and
     raw2vdf command line tools from VAPOR as well as the names of the parquet files
     to be passed to wvdf_timestep_pq.py
-    example:  python write_vdf_meta_pq.py -os linux -dir /media/loh -j BOMEX_indiv
+    example:  python write_vdf_meta_pq.py -os linux -dir /media/loh -ff nc -j BOMEX_indiv
 '''
 
 import json
 import glob
 import argparse
-
 
 def main(args):
     try:
@@ -29,11 +28,16 @@ def main(args):
     with open(f'{args.json_name}.json', 'w') as f:
         json.dump(the_dict, f, indent=4)
     
-    # change filetype to zarr if using zarr files
-    var_filelist = sorted(glob.glob(f'{args.filedir}/*.nc'))
-    the_dict['var_filenames'] = var_filelist
-    with open(f'{args.json_name}.json', 'w') as f:
-        json.dump(the_dict, f, indent=4)
+    if args.fileformat == 'nc':
+        var_filelist = sorted(glob.glob(f'{args.filedir}/*.nc'))
+        the_dict['var_filenames'] = var_filelist
+        with open(f'{args.json_name}.json', 'w') as f:
+            json.dump(the_dict, f, indent=4)
+    else:
+        var_filelist = sorted(glob.glob(f'{args.filedir}/*.zarr'))
+        the_dict['var_filenames'] = var_filelist
+        with open(f'{args.json_name}.json', 'w') as f:
+            json.dump(the_dict, f, indent=4)
 
 if __name__ == "__main__":
     linebreaks = argparse.RawTextHelpFormatter
@@ -42,6 +46,7 @@ if __name__ == "__main__":
                                      formatter_class=linebreaks)
     parser.add_argument('-os', '--op_sys', dest='os', help='operating system (eg. linux, mac)', required=True)
     parser.add_argument('-dir', '--filedir', dest='filedir', help='path to directory with parquet and netcdf/zarr files', required=True)
+    parser.add_argument('-ff', '--fileformat', dest='fileformat', help='type of file the variables are coming from (e.g. nc or zarr)', required=True)
     parser.add_argument('-j', '--json_name', dest='json_name', help='name of outputted json file', required=True)
     args = parser.parse_args()
 main(args)
