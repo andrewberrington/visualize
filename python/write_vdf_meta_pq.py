@@ -24,9 +24,14 @@ def main(args):
         with open(f'{args.json_name}.json', 'w') as f:
             json.dump(the_dict, f, indent=4)
 
-    filelist = sorted(glob.glob(f'{args.filedir}/*.pq'))
-    # filelist = sorted(glob.glob(f'{args.filedir}/*.nc'))
-    the_dict['filenames'] = filelist
+    pq_filelist = sorted(glob.glob(f'{args.filedir}/*.pq'))
+    the_dict['pq_filenames'] = pq_filelist
+    with open(f'{args.json_name}.json', 'w') as f:
+        json.dump(the_dict, f, indent=4)
+    
+    # change filetype to zarr if using zarr files
+    var_filelist = sorted(glob.glob(f'{args.filedir}/*.nc'))
+    the_dict['var_filenames'] = var_filelist
     with open(f'{args.json_name}.json', 'w') as f:
         json.dump(the_dict, f, indent=4)
 
@@ -36,7 +41,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=descrip,
                                      formatter_class=linebreaks)
     parser.add_argument('-os', '--op_sys', dest='os', help='operating system (eg. linux, mac)', required=True)
-    parser.add_argument('-dir', '--filedir', dest='filedir', help='path to directory with parquet files', required=True)
+    parser.add_argument('-dir', '--filedir', dest='filedir', help='path to directory with parquet and netcdf/zarr files', required=True)
     parser.add_argument('-j', '--json_name', dest='json_name', help='name of outputted json file', required=True)
     args = parser.parse_args()
 main(args)
