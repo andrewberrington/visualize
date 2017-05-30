@@ -1,10 +1,9 @@
 '''
-    convert an LES netcdf or zarr file to a raw binary file for vapor
+    convert an LES zarr file to a raw binary file for vapor
     and write out a script that will turn that file into
     vapor vdf (uses parquet files to establish the domain)
-    example:  python wvdf_timestep_pq.py -json BOMEX_indiv.json -v core -o core_ID
+    example:  python zarr_wvdf_timestep.py -json BOMEX_indiv.json -v core -o core_ID
 '''
-from netCDF4 import Dataset
 import zarr
 import pyarrow.parquet as pq
 import numpy as np
@@ -31,12 +30,8 @@ def dump_bin(filename, varname, outname):
     num_ts = len(files['pq_filenames'])
     pq_filelist = files['pq_filenames']
 
-    # to get z values, which don't change
-    # first = pq_filelist[0]
-    # table1 = pq.read_table(first).to_pandas()
-    # zvals = table1['z'].values * 25. * meters2km
-
     # to get the x, y extrema, which change depending on the timestep
+    # also get the absolute z max that determines the top of the domain
     x_mins = []
     y_mins = []
     x_maxes = []
@@ -68,6 +63,8 @@ def dump_bin(filename, varname, outname):
     y_indices = np.array([(y_mean - (0.5 * y_dim)), (y_mean + (0.5 * y_dim))]).astype(int)
 
     # in order to define the vdf using vdfcreate
+    # eventually will add the ability to change resolution for other datasets, for now is hardcoded
+    # to establish the vdf for BOMEX only
     xvals = np.arange(0, x_dim + 1) * 25. * meters2km
     yvals = np.arange(0, y_dim + 1) * 25. * meters2km
     zvals = np.arange(0, np.amax(z_maxes) + 1) * 25. * meters2km
@@ -94,7 +91,8 @@ def dump_bin(filename, varname, outname):
             try:
                 var_x = np.arange(x_indices[0][t_step], x_indices[1][t_step]+1)
                 var_y = np.arange(y_indices[0][t_step], y_indices[1][t_step]+1)
-                var_data = the_in.variables[varname][:, var_y, var_x]
+                # extra slice 0 is there to remove the time dimension from the zarr data
+                var_data = the_in[varname][:][0][:, var_y, var_x]
                 print(var_data.shape)
                 rev_shape = (var_data.shape[::-1])
                 string_shape = "{}x{}x{}".format(*rev_shape)
@@ -117,7 +115,8 @@ if __name__ == "__main__":
     descrip = __doc__.lstrip()
     parser = argparse.ArgumentParser(description=descrip,
                                      formatter_class=linebreaks)
-    parser.add_argument('-json', '--cloud_json', dest='cloud_json', help='json file with list of nc files', required=True)
+    parser.add_argument('-json', '--cloud_json', dest='cloud_json', help='json file with list of parquet and zarr files', required=True)
+    # parser.add_argument('-res', '--resolution', dest='resolution', help='resolution of the data in meters', required=True)
     parser.add_argument('-v', '--varname', dest='varname', help='name of netcdf 3d variable', required=True)
     parser.add_argument('-o', '--outname', dest='outname', help='name of the outputted vdf file', required=True)
     args = parser.parse_args()

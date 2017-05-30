@@ -1,7 +1,7 @@
 '''
     create and populate a json file containing the paths to the vdfcreate and
-    raw2vdf command line tools from VAPOR as well as the names of the parquet files
-    to be passed to wvdf_timestep_pq.py
+    raw2vdf command line tools from VAPOR as well as the names of the parquet and netcdf or zarr
+    files to be passed to vdf writer
     example:  python write_vdf_meta_pq.py -os linux -dir /media/loh -ff nc -j BOMEX_indiv
 '''
 
@@ -34,7 +34,7 @@ def main(args):
         with open(f'{args.json_name}.json', 'w') as f:
             json.dump(the_dict, f, indent=4)
     else:
-        var_filelist = sorted(glob.glob(f'{args.filedir}/*.zarr'))
+        var_filelist = sorted(glob.glob(f'{args.filedir}/*zarr'))
         the_dict['var_filenames'] = var_filelist
         with open(f'{args.json_name}.json', 'w') as f:
             json.dump(the_dict, f, indent=4)
