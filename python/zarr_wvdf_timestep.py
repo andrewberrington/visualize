@@ -2,7 +2,7 @@
     convert an LES zarr file to a raw binary file for vapor
     and write out a script that will turn that file into
     vapor vdf (uses parquet files to establish the domain)
-    example:  python zarr_wvdf_timestep.py -json BOMEX_indiv.json -v core -o core_ID
+    example:  python zarr_wvdf_timestep.py -json BOMEX_indiv.json -v QN -o QN_ID
 '''
 import zarr
 import pyarrow.parquet as pq
@@ -40,6 +40,7 @@ def dump_bin(filename, varname, outname):
     y_mean = []
     for f in pq_filelist:
         table = pq.read_table(f).to_pandas()
+        # cloud_id = table['cloud_id'][0]
         x_mins.append(np.amin(table['x'].values))
         y_mins.append(np.amin(table['y'].values))
         x_maxes.append(np.amax(table['x'].values))
@@ -118,6 +119,8 @@ if __name__ == "__main__":
     parser.add_argument('-json', '--cloud_json', dest='cloud_json', help='json file with list of parquet and zarr files', required=True)
     # parser.add_argument('-res', '--resolution', dest='resolution', help='resolution of the data in meters', required=True)
     parser.add_argument('-v', '--varname', dest='varname', help='name of netcdf 3d variable', required=True)
+    # new argument to establish what type of cloud we want to analyze
+    # parser.add_argument('-t' '--type', dest='type', help='name of the type of cloud to visualize (e.g. core, condensed)', required=True)
     parser.add_argument('-o', '--outname', dest='outname', help='name of the outputted vdf file', required=True)
     args = parser.parse_args()
 binfile, rev_shape = dump_bin(args.cloud_json, args.varname, args.outname)
