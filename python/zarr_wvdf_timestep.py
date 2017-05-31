@@ -7,7 +7,6 @@
 import zarr
 import pyarrow.parquet as pq
 import numpy as np
-import pandas as pd
 import argparse
 import sys
 import json
@@ -53,7 +52,7 @@ def dump_bin(filename, varname, outname):
     x_maxes = np.array(x_maxes)
     y_maxes = np.array(y_maxes)
     z_maxes = np.array(z_maxes)
-    y_mins= np.array(y_mins)
+    y_mins = np.array(y_mins)
 
     x_dim = np.amax((x_maxes - x_mins))
     y_dim = np.amax((y_maxes - y_mins))
@@ -74,7 +73,7 @@ def dump_bin(filename, varname, outname):
     for name, vals in zip(filenames, arrays):
         with open(name, 'w') as outfile:
             [outfile.write('{:6.3f} '.format(item))
-            for item in vals[:-1]]
+             for item in vals[:-1]]
             outfile.write('{:6.3f}\n'.format(vals[-1]))
     lenx, leny, lenz = len(xvals), len(yvals), len(zvals)
     the_shape = (num_ts, lenx, leny, lenz)
@@ -87,27 +86,28 @@ def dump_bin(filename, varname, outname):
     print('writing an array of {}(t,x,y,z) shape {}x{}x{}x{}'.format(varname, *the_shape))
 
     for t_step, the_file in enumerate(files['var_filenames']):
-        with zarr.open_group(the_file, mode='r') as the_in:
-            try:
-                var_x = np.arange(x_indices[0][t_step], x_indices[1][t_step]+1)
-                var_y = np.arange(y_indices[0][t_step], y_indices[1][t_step]+1)
-                # extra slice 0 is there to remove the time dimension from the zarr data
-                var_data = the_in[varname][:][0][:, var_y, var_x]
-                print(var_data.shape)
-                rev_shape = (var_data.shape[::-1])
-                string_shape = "{}x{}x{}".format(*rev_shape)
-            except KeyError:
-                print('variable names are: ', write_error(the_in))
-                sys.exit(1)
-            tmpname = 'temp.bin'
-            fp = np.memmap(tmpname, dtype=np.float32, mode='w+',
-                           shape=var_data.shape)
-            fp[...] = var_data[...]
-            del fp
-            raw2vdf = files['raw2vdf']
-            thecmd = f'{raw2vdf} -varname {varname} -ts {t_step:d} {outname}.vdf {tmpname}'
-            status2, output2 = subprocess.getstatusoutput(thecmd)
-            print(status2, output2)
+        the_in = zarr.open_group(the_file, mode='r')
+        try:
+            startx, stopx = x_indices[0][t_step], x_indices[1][t_step] + 1
+            starty, stopy = y_indices[0][t_step], y_indices[1][t_step] + 1
+            # extra slice 0 is there to remove the time dimension from the zarr data
+            var_data = the_in[varname][:][0]
+            var_data = var_data[:, starty:stopy, startx:stopx]
+            print(var_data.shape)
+            rev_shape = (var_data.shape[::-1])
+            string_shape = "{}x{}x{}".format(*rev_shape)
+        except KeyError:
+            print('variable names are: ', write_error(the_in))
+            sys.exit(1)
+        tmpname = 'temp.bin'
+        fp = np.memmap(tmpname, dtype=np.float32, mode='w+',
+                       shape=var_data.shape)
+        fp[...] = var_data[...]
+        del fp
+        raw2vdf = files['raw2vdf']
+        thecmd = f'{raw2vdf} -varname {varname} -ts {t_step:d} {outname}.vdf {tmpname}'
+        status2, output2 = subprocess.getstatusoutput(thecmd)
+        print(status2, output2)
     return out_name, string_shape
 
 if __name__ == "__main__":
