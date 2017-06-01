@@ -54,7 +54,7 @@ def dump_bin(filename, varname, tracktype, outname):
         xvals_full.append(table['x'].values)
         yvals_full.append(table['y'].values)
         z_maxes.append(np.amax(table['z'].values))
-        cloud_id = table['cloud_id']
+        # cloud_id = table['cloud_id']
         tablerows = table['type'] == keys[tracktype]
         df_thetype = table[tablerows]
         xvals_sub.append(df_thetype['x'].values)
@@ -68,14 +68,9 @@ def dump_bin(filename, varname, tracktype, outname):
         width_x_full.append(np.amax(x) - np.amin(x))
         width_y_full.append(np.amax(y) - np.amin(y))
 
-    # define the domain of the data from the subset with given type
-    width_y_sub = []
-    width_x_sub = []
     x_mean = []
     y_mean = []
     for x, y in zip(xvals_sub, yvals_sub):
-        width_x_sub.append(np.amax(x) - np.amin(x))
-        width_y_sub.append(np.amax(y) - np.amin(y))
         x_mean.append(np.mean(x))
         y_mean.append(np.mean(y))
 
