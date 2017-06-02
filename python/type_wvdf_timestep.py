@@ -62,15 +62,13 @@ def dump_bin(filename, varname, tracktype, outname):
         zvals_sub.append(df_thetype['z'].values)
 
     # define the full domain of the vdf
+    x_mean = []
+    y_mean = []
     width_y_full = []
     width_x_full = []
     for x, y in zip(xvals_full, yvals_full):
         width_x_full.append(np.amax(x) - np.amin(x))
         width_y_full.append(np.amax(y) - np.amin(y))
-
-    x_mean = []
-    y_mean = []
-    for x, y in zip(xvals_sub, yvals_sub):
         x_mean.append(np.mean(x))
         y_mean.append(np.mean(y))
 
