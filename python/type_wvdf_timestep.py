@@ -54,7 +54,7 @@ def dump_bin(filename, varname, tracktype, outname):
         xvals_full.append(table['x'].values)
         yvals_full.append(table['y'].values)
         z_maxes.append(np.amax(table['z'].values))
-        # cloud_id = table['cloud_id']
+        cloud_id = table['cloud_id'].values[0]
         tablerows = table['type'] == keys[tracktype]
         df_thetype = table[tablerows]
         xvals_sub.append(df_thetype['x'].values)
@@ -99,7 +99,7 @@ def dump_bin(filename, varname, tracktype, outname):
     string_shape = f'{lenx}x{leny}x{lenz}'
     vdfcreate = files['vdfcreate']
     thecmd = f'{vdfcreate} -xcoords xvals.txt -ycoords yvals.txt -zcoords zvals.txt \
-             -gridtype stretched -dimension {string_shape} -vars3d {varname}_{tracktype} -numts {num_ts} {outname}.vdf'
+             -gridtype stretched -dimension {string_shape} -vars3d {varname}_{tracktype} -numts {num_ts} {outname}_{cloud_id}.vdf'
     status1, output1 = subprocess.getstatusoutput(thecmd)
     out_name = '{}.bin'.format(outname)
     print('writing an array of {}(t,x,y,z) shape {}x{}x{}x{}'.format(varname, *the_shape))
@@ -132,7 +132,7 @@ def dump_bin(filename, varname, tracktype, outname):
         fp[...] = var_data[...]
         del fp
         raw2vdf = files['raw2vdf']
-        thecmd = f'{raw2vdf} -varname {varname}_{tracktype} -ts {t_step:d} {outname}.vdf {tmpname}'
+        thecmd = f'{raw2vdf} -varname {varname}_{tracktype} -ts {t_step:d} {outname}_{cloud_id}.vdf {tmpname}'
         status2, output2 = subprocess.getstatusoutput(thecmd)
         print(status2, output2)
     return out_name, string_shape
