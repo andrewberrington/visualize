@@ -64,7 +64,10 @@ def dump_bin(filename, varname, tracktype, outname):
         y_maxes.append(np.amax(table['y'].values))
         y_mins.append(np.amin(table['y'].values))
         cloud_id = table['cloud_id'].values[0]
-        tablerows = table['type'] == keys[tracktype]
+        if tracktype == 'full':
+            tablerows = table['type'] == keys["condensed"]
+        else:
+            tablerows = table['type'] == keys[tracktype]
         df_thetype = table[tablerows]
         xvals_sub.append(df_thetype['x'].values)
         yvals_sub.append(df_thetype['y'].values)
@@ -155,6 +158,8 @@ def dump_bin(filename, varname, tracktype, outname):
             indices = np.array((z, y_r, x_r))
             b_map = np.zeros_like(var_data, dtype=bool)
             b_map[tuple(indices)] = True
+            if tracktype == 'full':
+                b_map[:] = True
             var_data[~b_map] = 0
             var_data = var_data[:, :, :]
             print(var_data.shape)
