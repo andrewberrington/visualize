@@ -11,6 +11,7 @@ import argparse
 import sys
 import json
 import subprocess
+import itertools
 
 
 def write_error(the_in):
@@ -27,7 +28,7 @@ def dump_bin(filename, varname, tracktype, outname):
     with open(filename, 'r') as f:
         files = json.load(f)
     num_ts = len(files['pq_filenames'])
-    pq_filelist = files['pq_filenames']
+    pq_filelist = sorted(files['pq_filenames'])
 
     keys = {
         "condensed": 0,
@@ -49,17 +50,44 @@ def dump_bin(filename, varname, tracktype, outname):
     yvals_sub = []
     zvals_sub = []
     z_maxes = []
+    x_maxes = []
+    x_mins = []
+    y_maxes = []
+    y_mins = []
     for f in pq_filelist:
         table = pq.read_table(f).to_pandas()
         xvals_full.append(table['x'].values)
         yvals_full.append(table['y'].values)
         z_maxes.append(np.amax(table['z'].values))
+        x_maxes.append(np.amax(table['x'].values))
+        x_mins.append(np.amin(table['x'].values))
+        y_maxes.append(np.amax(table['y'].values))
+        y_mins.append(np.amin(table['y'].values))
         cloud_id = table['cloud_id'].values[0]
         tablerows = table['type'] == keys[tracktype]
         df_thetype = table[tablerows]
         xvals_sub.append(df_thetype['x'].values)
         yvals_sub.append(df_thetype['y'].values)
         zvals_sub.append(df_thetype['z'].values)
+
+    
+    min_x, max_x = np.amin(x_mins), np.amax(x_maxes)
+    min_y, max_y = np.amax(y_mins), np.amax(y_maxes)
+
+    # print(min_x, max_x, min_y, max_y)
+
+    # to handle the cases where the cloud crosses a boundary
+    domain = 256
+
+    x = np.array(list(itertools.chain.from_iterable(xvals_full)))
+    y = np.array(list(itertools.chain.from_iterable(yvals_full)))
+    # hardcoded for bomex currently
+    off_x = 0
+    off_y = 0
+    if (max_x - min_x) > (domain / 2):
+        off_x = domain - np.min(x[(x > domain / 2)])
+    if (max_y - min_y) > (domain / 2):
+        off_y = domain - np.min(y[(y > domain / 2)])
 
     # define the full domain of the vdf
     x_mean = []
@@ -77,14 +105,14 @@ def dump_bin(filename, varname, tracktype, outname):
 
     # get the start and end indices for the x, y dimensions of the box
     # containing the cloud at a given timestep
-    x_indices = np.array([(x_mean - (0.5 * x_dim_full)), (x_mean + (0.5 * x_dim_full))]).astype(int)
-    y_indices = np.array([(y_mean - (0.5 * y_dim_full)), (y_mean + (0.5 * y_dim_full))]).astype(int)
+    x_indices = np.array([0, 256]).astype(int)
+    y_indices = np.array([0, 256]).astype(int)
 
     # in order to define the vdf using vdfcreate
     # eventually will add the ability to change resolution for other datasets
     # for now is hardcoded to establish the vdf for BOMEX only
-    xvals = np.arange(0, x_dim_full + 1) * 25. * meters2km
-    yvals = np.arange(0, y_dim_full + 1) * 25. * meters2km
+    xvals = np.arange(0, x_indices[1]) * 25. * meters2km
+    yvals = np.arange(0, y_indices[1]) * 25. * meters2km
     zvals = np.arange(0, np.amax(z_maxes) + 1) * 25. * meters2km
 
     filenames = ['xvals.txt', 'yvals.txt', 'zvals.txt']
@@ -107,19 +135,27 @@ def dump_bin(filename, varname, tracktype, outname):
     for t_step, the_file in enumerate(files['var_filenames']):
         the_in = zarr.open_group(the_file, mode='r')
         try:
-            startx, stopx = x_indices[0][t_step], x_indices[1][t_step] + 1
-            starty, stopy = y_indices[0][t_step], y_indices[1][t_step] + 1
+            startx, stopx = x_indices[0], x_indices[1]
+            starty, stopy = y_indices[0], y_indices[1]
             # extra slice 0 is there to remove the time dimension from the zarr data
             var_data = the_in[varname][:][0]
-            # only map the values that are valid for the given type
-            x = xvals_sub[t_step]
-            y = yvals_sub[t_step]
+            x_r = xvals_sub[t_step]
+            y_r = yvals_sub[t_step]
             z = zvals_sub[t_step]
-            indices = np.array((z, y, x))
+            if off_x > 0:
+                var_data = np.roll(var_data, off_x, axis=2)
+                x_r = x_r + off_x
+                x_r[x_r > domain - 1] = x_r[x_r > domain - 1] - domain - 1
+            if off_y > 0:
+                var_data = np.roll(var_data, off_y, axis=1)
+                y_r = y_r + off_y
+                y_r[y_r > domain - 1] = y_r[y_r > domain - 1] - domain - 1
+            # only map the values that are valid for the given type
+            indices = np.array((z, y_r, x_r))
             b_map = np.zeros_like(var_data, dtype=bool)
             b_map[tuple(indices)] = True
             var_data[~b_map] = 0
-            var_data = var_data[:, starty:stopy, startx:stopx]
+            var_data = var_data[:, :, :]
             print(var_data.shape)
             rev_shape = (var_data.shape[::-1])
             string_shape = "{}x{}x{}".format(*rev_shape)
@@ -146,7 +182,7 @@ if __name__ == "__main__":
     # parser.add_argument('-res', '--resolution', dest='resolution', help='resolution of the data in meters', required=True)
     parser.add_argument('-v', '--varname', dest='varname', help='name of netcdf 3d variable', required=True)
     # new argument to establish what type of cloud we want to analyze
-    parser.add_argument('-t' '--tracktype', dest='tracktype', help='name of the type of cloud to visualize (e.g. core, condensed)', required=True)
+    parser.add_argument('-t', '--tracktype', dest='tracktype', help='name of the type of cloud to visualize (e.g. core, condensed)', required=True)
     parser.add_argument('-o', '--outname', dest='outname', help='name of the outputted vdf file', required=True)
     args = parser.parse_args()
 binfile, rev_shape = dump_bin(args.cloud_json, args.varname, args.tracktype, args.outname)
