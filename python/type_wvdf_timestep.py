@@ -90,18 +90,19 @@ def dump_bin(filename, varname, tracktype, outname):
         off_y = domain - np.min(y[(y > domain / 2)])
 
     # define the full domain of the vdf
-    x_mean = []
-    y_mean = []
-    width_y_full = []
-    width_x_full = []
-    for x, y in zip(xvals_full, yvals_full):
-        width_x_full.append(np.amax(x) - np.amin(x))
-        width_y_full.append(np.amax(y) - np.amin(y))
-        x_mean.append(np.mean(x))
-        y_mean.append(np.mean(y))
+    # currently disabled
+    # x_mean = []
+    # y_mean = []
+    # width_y_full = []
+    # width_x_full = []
+    # for x, y in zip(xvals_full, yvals_full):
+    #     width_x_full.append(np.amax(x) - np.amin(x))
+    #     width_y_full.append(np.amax(y) - np.amin(y))
+    #     x_mean.append(np.mean(x))
+    #     y_mean.append(np.mean(y))
 
-    x_dim_full = np.amax(width_x_full)
-    y_dim_full = np.amax(width_y_full)
+    # x_dim_full = np.amax(width_x_full)
+    # y_dim_full = np.amax(width_y_full)
 
     # get the start and end indices for the x, y dimensions of the box
     # containing the cloud at a given timestep
@@ -181,7 +182,6 @@ if __name__ == "__main__":
     parser.add_argument('-json', '--cloud_json', dest='cloud_json', help='json file with list of parquet and zarr files', required=True)
     # parser.add_argument('-res', '--resolution', dest='resolution', help='resolution of the data in meters', required=True)
     parser.add_argument('-v', '--varname', dest='varname', help='name of netcdf 3d variable', required=True)
-    # new argument to establish what type of cloud we want to analyze
     parser.add_argument('-t', '--tracktype', dest='tracktype', help='name of the type of cloud to visualize (e.g. core, condensed)', required=True)
     parser.add_argument('-o', '--outname', dest='outname', help='name of the outputted vdf file', required=True)
     args = parser.parse_args()

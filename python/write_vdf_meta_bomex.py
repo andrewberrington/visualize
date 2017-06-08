@@ -58,7 +58,7 @@ if __name__ == "__main__":
                                      formatter_class=linebreaks)
     parser.add_argument('-os', '--op_sys', dest='os', help='operating system (eg. linux, mac)', required=True)
     parser.add_argument('-pdir', '--parqdir', dest='parqdir', help='path to directory containing the parquet files', required=True)
-    parser.add_argument('-zdir', '--zarrdir', dest='zarrdir', help='path to directory containing the zarr files')
+    parser.add_argument('-zdir', '--zarrdir', dest='zarrdir', help='path to directory containing the zarr files', required=True)
     parser.add_argument('-j', '--json_name', dest='json_name', help='name of outputted json file', required=True)
     args = parser.parse_args()
 main(args)
