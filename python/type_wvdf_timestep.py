@@ -2,7 +2,7 @@
     convert an LES zarr file to a raw binary file for vapor
     and write out a script that will turn that file into
     vapor vdf (uses parquet files to establish the domain)
-    example:  python zarr_wvdf_timestep.py -json BOMEX_indiv.json -v QN -t condensed -o QN_ID
+    example: python type_wvdf_timestep.py -json 16936.json -v QN -t condensed -o QN_condensed
 '''
 import zarr
 import pyarrow.parquet as pq
@@ -22,13 +22,9 @@ def write_error(the_in):
     return namelist
 
 
-def dump_bin(filename, varname, tracktype, outname):
-    meters2km = 1.e-3
-    print(filename)
-    with open(filename, 'r') as f:
-        files = json.load(f)
-    num_ts = len(files['pq_filenames'])
-    pq_filelist = sorted(files['pq_filenames'])
+def process_pq(pq_list, the_type):
+    '''function to process a list of pq files and return appropriate
+       3D coordinates'''
 
     keys = {
         "condensed": 0,
@@ -44,36 +40,47 @@ def dump_bin(filename, varname, tracktype, outname):
 
     # to get both the full domain of x and y along with the x and y coordinates
     # for the given type (condensed, core, etc.)
-    xvals_full = []
-    yvals_full = []
-    xvals_sub = []
-    yvals_sub = []
-    zvals_sub = []
+    x_full = []
+    y_full = []
+    x_sub = []
+    y_sub = []
+    z_sub = []
     z_maxes = []
     x_maxes = []
     x_mins = []
     y_maxes = []
     y_mins = []
-    for f in pq_filelist:
+    for f in pq_list:
         table = pq.read_table(f).to_pandas()
-        xvals_full.append(table['x'].values)
-        yvals_full.append(table['y'].values)
+        x_full.append(table['x'].values)
+        y_full.append(table['y'].values)
         z_maxes.append(np.amax(table['z'].values))
         x_maxes.append(np.amax(table['x'].values))
         x_mins.append(np.amin(table['x'].values))
         y_maxes.append(np.amax(table['y'].values))
         y_mins.append(np.amin(table['y'].values))
-        cloud_id = table['cloud_id'].values[0]
-        if tracktype == 'full':
+        c_id = table['cloud_id'].values[0]
+        if the_type == 'full':
             tablerows = table['type'] == keys["condensed"]
         else:
-            tablerows = table['type'] == keys[tracktype]
+            tablerows = table['type'] == keys[the_type]
         df_thetype = table[tablerows]
-        xvals_sub.append(df_thetype['x'].values)
-        yvals_sub.append(df_thetype['y'].values)
-        zvals_sub.append(df_thetype['z'].values)
+        x_sub.append(df_thetype['x'].values)
+        y_sub.append(df_thetype['y'].values)
+        z_sub.append(df_thetype['z'].values)
+    return x_full, y_full, x_sub, y_sub, z_sub, c_id, z_maxes, x_maxes, x_mins, y_maxes, y_mins
 
-    
+
+def dump_bin(filename, varname, tracktype, outname):
+    meters2km = 1.e-3
+    print(filename)
+    with open(filename, 'r') as f:
+        files = json.load(f)
+    num_ts = len(files['pq_filenames'])
+    pq_filelist = sorted(files['pq_filenames'])
+
+    x_full, y_full, x_sub, y_sub, z_sub, cloud_id, z_maxes, x_maxes, x_mins, y_maxes, y_mins = process_pq(pq_filelist, tracktype)
+
     min_x, max_x = np.amin(x_mins), np.amax(x_maxes)
     min_y, max_y = np.amax(y_mins), np.amax(y_maxes)
 
@@ -82,8 +89,8 @@ def dump_bin(filename, varname, tracktype, outname):
     # to handle the cases where the cloud crosses a boundary
     domain = 256
 
-    x = np.array(list(itertools.chain.from_iterable(xvals_full)))
-    y = np.array(list(itertools.chain.from_iterable(yvals_full)))
+    x = np.array(list(itertools.chain.from_iterable(x_full)))
+    y = np.array(list(itertools.chain.from_iterable(y_full)))
     # hardcoded for bomex currently
     off_x = 0
     off_y = 0
@@ -139,13 +146,13 @@ def dump_bin(filename, varname, tracktype, outname):
     for t_step, the_file in enumerate(files['var_filenames']):
         the_in = zarr.open_group(the_file, mode='r')
         try:
-            startx, stopx = x_indices[0], x_indices[1]
-            starty, stopy = y_indices[0], y_indices[1]
+            # startx, stopx = x_indices[0], x_indices[1]
+            # starty, stopy = y_indices[0], y_indices[1]
             # extra slice 0 is there to remove the time dimension from the zarr data
             var_data = the_in[varname][:][0]
-            x_r = xvals_sub[t_step]
-            y_r = yvals_sub[t_step]
-            z = zvals_sub[t_step]
+            x_r = x_sub[t_step]
+            y_r = y_sub[t_step]
+            z = z_sub[t_step]
             if off_x > 0:
                 var_data = np.roll(var_data, off_x, axis=2)
                 x_r = x_r + off_x
