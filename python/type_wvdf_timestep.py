@@ -25,8 +25,8 @@ def write_error(the_in):
 
 def process_pq(pq_list, the_type):
     '''
-    function to process a list of pq files and return appropriate
-    3D coordinates
+    function to process a list of parquet files and return dictionaries
+    of appropriate 3D coordinates
     '''
 
     keys = {
@@ -82,12 +82,10 @@ def dump_bin(filename, varname, tracktype, outname):
     min_x, max_x = np.amin(extdict[('x', 'min')]), np.amax(extdict[('x', 'max')])
     min_y, max_y = np.amax(extdict[('y', 'min')]), np.amax(extdict[('x', 'max')])
 
-    # to handle the cases where the cloud crosses a boundary
+    # to handle the cases where the cloud crosses a boundary, hardcoded for bomex currently
     domain = 256
-
     x = np.array(list(itertools.chain.from_iterable(fulldict[('x', 'full')])))
     y = np.array(list(itertools.chain.from_iterable(fulldict[('y', 'full')])))
-    # hardcoded for bomex currently
     off_x = 0
     off_y = 0
     if (max_x - min_x) > (domain / 2):
