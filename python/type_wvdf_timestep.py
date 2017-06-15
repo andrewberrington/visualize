@@ -1,8 +1,8 @@
 '''
     convert an LES zarr file to a raw binary file for vapor
-    and write out a script that will turn that file into
-    vapor vdf (uses parquet files to establish the domain)
-    example: python type_wvdf_timestep.py -json 16936.json -v QN -t condensed -o QN_condensed
+    and write out a script that will turn that file into vapor vdf
+    (uses parquet files containing 3D coordinates to establish the domain)
+    example usage: python type_wvdf_timestep.py -json 16936.json -v QN -t condensed -o QN_condensed
 '''
 import zarr
 import pyarrow.parquet as pq
@@ -12,6 +12,7 @@ import sys
 import json
 import subprocess
 import itertools
+from collections import defaultdict
 
 
 def write_error(the_in):
@@ -23,8 +24,10 @@ def write_error(the_in):
 
 
 def process_pq(pq_list, the_type):
-    '''function to process a list of pq files and return appropriate
-       3D coordinates'''
+    '''
+    function to process a list of pq files and return appropriate
+    3D coordinates
+    '''
 
     keys = {
         "condensed": 0,
@@ -40,35 +43,30 @@ def process_pq(pq_list, the_type):
 
     # to get both the full domain of x and y along with the x and y coordinates
     # for the given type (condensed, core, etc.)
-    x_full = []
-    y_full = []
-    x_sub = []
-    y_sub = []
-    z_sub = []
-    z_maxes = []
-    x_maxes = []
-    x_mins = []
-    y_maxes = []
-    y_mins = []
+
+    full = defaultdict(list)
+    sub = defaultdict(list)
+    extrema = defaultdict(list)
     for f in pq_list:
         table = pq.read_table(f).to_pandas()
-        x_full.append(table['x'].values)
-        y_full.append(table['y'].values)
-        z_maxes.append(np.amax(table['z'].values))
-        x_maxes.append(np.amax(table['x'].values))
-        x_mins.append(np.amin(table['x'].values))
-        y_maxes.append(np.amax(table['y'].values))
-        y_mins.append(np.amin(table['y'].values))
         c_id = table['cloud_id'].values[0]
         if the_type == 'full':
             tablerows = table['type'] == keys["condensed"]
         else:
             tablerows = table['type'] == keys[the_type]
         df_thetype = table[tablerows]
-        x_sub.append(df_thetype['x'].values)
-        y_sub.append(df_thetype['y'].values)
-        z_sub.append(df_thetype['z'].values)
-    return x_full, y_full, x_sub, y_sub, z_sub, c_id, z_maxes, x_maxes, x_mins, y_maxes, y_mins
+        for dimension in ['x', 'y', 'z']:
+            for suffix in ['full', 'sub']:
+                if suffix == 'full':
+                    full[(dimension, suffix)].append(table[dimension].values)
+                else:
+                    sub[(dimension, suffix)].append(df_thetype[dimension].values)
+            for suffix in ['min', 'max']:
+                if suffix == 'min':
+                    extrema[(dimension, suffix)].append(np.amin(table[dimension].values))
+                else:
+                    extrema[(dimension, suffix)].append(np.amax(table[dimension].values))
+    return full, sub, c_id, extrema
 
 
 def dump_bin(filename, varname, tracktype, outname):
@@ -79,18 +77,16 @@ def dump_bin(filename, varname, tracktype, outname):
     num_ts = len(files['pq_filenames'])
     pq_filelist = sorted(files['pq_filenames'])
 
-    x_full, y_full, x_sub, y_sub, z_sub, cloud_id, z_maxes, x_maxes, x_mins, y_maxes, y_mins = process_pq(pq_filelist, tracktype)
+    fulldict, subdict, cloud_id, extdict = process_pq(pq_filelist, tracktype)
 
-    min_x, max_x = np.amin(x_mins), np.amax(x_maxes)
-    min_y, max_y = np.amax(y_mins), np.amax(y_maxes)
-
-    # print(min_x, max_x, min_y, max_y)
+    min_x, max_x = np.amin(extdict[('x', 'min')]), np.amax(extdict[('x', 'max')])
+    min_y, max_y = np.amax(extdict[('y', 'min')]), np.amax(extdict[('x', 'max')])
 
     # to handle the cases where the cloud crosses a boundary
     domain = 256
 
-    x = np.array(list(itertools.chain.from_iterable(x_full)))
-    y = np.array(list(itertools.chain.from_iterable(y_full)))
+    x = np.array(list(itertools.chain.from_iterable(fulldict[('x', 'full')])))
+    y = np.array(list(itertools.chain.from_iterable(fulldict[('y', 'full')])))
     # hardcoded for bomex currently
     off_x = 0
     off_y = 0
@@ -124,7 +120,7 @@ def dump_bin(filename, varname, tracktype, outname):
     # for now is hardcoded to establish the vdf for BOMEX only
     xvals = np.arange(0, x_indices[1]) * 25. * meters2km
     yvals = np.arange(0, y_indices[1]) * 25. * meters2km
-    zvals = np.arange(0, np.amax(z_maxes) + 1) * 25. * meters2km
+    zvals = np.arange(0, np.amax(extdict[('z', 'max')]) + 1) * 25. * meters2km
 
     filenames = ['xvals.txt', 'yvals.txt', 'zvals.txt']
     arrays = [xvals, yvals, zvals]
@@ -150,9 +146,9 @@ def dump_bin(filename, varname, tracktype, outname):
             # starty, stopy = y_indices[0], y_indices[1]
             # extra slice 0 is there to remove the time dimension from the zarr data
             var_data = the_in[varname][:][0]
-            x_r = x_sub[t_step]
-            y_r = y_sub[t_step]
-            z = z_sub[t_step]
+            x_r = subdict[('x', 'sub')][t_step]
+            y_r = subdict[('y', 'sub')][t_step]
+            z = subdict[('z', 'sub')][t_step]
             if off_x > 0:
                 var_data = np.roll(var_data, off_x, axis=2)
                 x_r = x_r + off_x
@@ -193,7 +189,7 @@ if __name__ == "__main__":
                                      formatter_class=linebreaks)
     parser.add_argument('-json', '--cloud_json', dest='cloud_json', help='json file with list of parquet and zarr files', required=True)
     # parser.add_argument('-res', '--resolution', dest='resolution', help='resolution of the data in meters', required=True)
-    parser.add_argument('-v', '--varname', dest='varname', help='name of netcdf 3d variable', required=True)
+    parser.add_argument('-v', '--varname', dest='varname', help='name of 3d variable', required=True)
     parser.add_argument('-t', '--tracktype', dest='tracktype', help='name of the type of cloud to visualize (e.g. core, condensed)', required=True)
     parser.add_argument('-o', '--outname', dest='outname', help='name of the outputted vdf file', required=True)
     args = parser.parse_args()
