@@ -25,8 +25,8 @@ def write_error(the_in):
 
 def process_pq(pq_list, the_type):
     '''
-    function to process a list of parquet files and return dictionaries
-    of appropriate 3D coordinates
+    function to process a list of pq files and return appropriate
+    3D coordinates
     '''
 
     keys = {
@@ -50,7 +50,7 @@ def process_pq(pq_list, the_type):
     for f in pq_list:
         table = pq.read_table(f).to_pandas()
         c_id = table['cloud_id'].values[0]
-        if the_type == 'full':
+        if the_type == 'full' or the_type == 'base':
             tablerows = table['type'] == keys["condensed"]
         else:
             tablerows = table['type'] == keys[the_type]
@@ -64,8 +64,10 @@ def process_pq(pq_list, the_type):
             for suffix in ['min', 'max']:
                 if suffix == 'min':
                     extrema[(dimension, suffix)].append(np.amin(table[dimension].values))
+                    sub[(dimension, suffix)].append(np.amin(df_thetype[dimension].values))
                 else:
                     extrema[(dimension, suffix)].append(np.amax(table[dimension].values))
+                    sub[(dimension, suffix)].append(np.amax(table[dimension].values))
     return full, sub, c_id, extrema
 
 
@@ -82,10 +84,12 @@ def dump_bin(filename, varname, tracktype, outname):
     min_x, max_x = np.amin(extdict[('x', 'min')]), np.amax(extdict[('x', 'max')])
     min_y, max_y = np.amax(extdict[('y', 'min')]), np.amax(extdict[('x', 'max')])
 
-    # to handle the cases where the cloud crosses a boundary, hardcoded for bomex currently
+    # to handle the cases where the cloud crosses a boundary
     domain = 256
+
     x = np.array(list(itertools.chain.from_iterable(fulldict[('x', 'full')])))
     y = np.array(list(itertools.chain.from_iterable(fulldict[('y', 'full')])))
+    # hardcoded for bomex currently
     off_x = 0
     off_y = 0
     if (max_x - min_x) > (domain / 2):
@@ -146,6 +150,8 @@ def dump_bin(filename, varname, tracktype, outname):
             var_data = the_in[varname][:][0]
             x_r = subdict[('x', 'sub')][t_step]
             y_r = subdict[('y', 'sub')][t_step]
+            if tracktype == 'base':
+                z = subdict[('z', 'min')][t_step]
             z = subdict[('z', 'sub')][t_step]
             if off_x > 0:
                 var_data = np.roll(var_data, off_x, axis=2)
