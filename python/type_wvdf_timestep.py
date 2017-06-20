@@ -150,8 +150,6 @@ def dump_bin(filename, varname, tracktype, outname):
             var_data = the_in[varname][:][0]
             x_r = subdict[('x', 'sub')][t_step]
             y_r = subdict[('y', 'sub')][t_step]
-            if tracktype == 'base':
-                z = subdict[('z', 'min')][t_step]
             z = subdict[('z', 'sub')][t_step]
             if off_x > 0:
                 var_data = np.roll(var_data, off_x, axis=2)
@@ -164,10 +162,15 @@ def dump_bin(filename, varname, tracktype, outname):
             # only map the values that are valid for the given type
             indices = np.array((z, y_r, x_r))
             b_map = np.zeros_like(var_data, dtype=bool)
-            b_map[tuple(indices)] = True
             if tracktype == 'full':
                 b_map[:] = True
+            elif tracktype == 'base':
+                z_base = subdict[('z', 'min')][t_step]
+                b_map[z_base, y_r, x_r] = True
+            else:
+                b_map[tuple(indices)] = True
             var_data[~b_map] = 0
+            var_data = np.ma.masked_values(var_data, 0)
             var_data = var_data[:, :, :]
             print(var_data.shape)
             rev_shape = (var_data.shape[::-1])
