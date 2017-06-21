@@ -1,17 +1,33 @@
 '''
-    create and populate a json file containing the paths to the vdfcreate and
-    raw2vdf command line tools from VAPOR as well as the names of the parquet or zarr
-    files to be passed to vdf writer
     example:  python write_vdf_meta_pq.py -os linux -pdir /mnt/datatmp/visualize/andrew/cloud_11872/11872 -zdir /mnt/datatmp/visualize/andrew/bomex_zarr -j 11872
 '''
 
 import json
 import glob
 import argparse
-import sys
+# import sys
 import numpy as np
 
+
 def main(args):
+    '''
+       create and populate a json file containing the paths to the vdfcreate and
+       raw2vdf command line tools from VAPOR as well as the names of the parquet
+       or zarr files to be passed to vdf writer
+
+       Parameters
+       ----------
+
+       args: arguments from parser
+          required to establish the paths to the vapor tools, parquet and zarr files
+
+       Returns
+       -------
+
+       json_name.json: json file
+          json file containing the metadata (output to current working directory)
+    '''
+
     try:
         with open(f'{args.json_name}.json', 'r') as f:
             the_dict = json.load(f)
@@ -30,11 +46,12 @@ def main(args):
     with open(f'{args.json_name}.json', 'w') as f:
         json.dump(the_dict, f, indent=4)
 
+    # find the start of the pq filelist and convert to the zarr timestamp
     startpq = pq_filelist[0]
     start_int_pq = int(startpq[-6:-3])
-    timestep = 60 # s
+    timestep = 60  # s
     start_pq_to_zarr = timestep * start_int_pq
-    
+
     # in order to get the timestamp from the first zarr file in the directory
     zarr_filelist = sorted(glob.glob(f'{args.zarrdir}/*zarr'))
     startzarr = zarr_filelist[0]

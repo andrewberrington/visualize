@@ -22,6 +22,9 @@ def write_error(the_in):
             namelist.append(name)
     return namelist
 
+# the following function will eventually be separated into a different module
+# and imported to be used in dump_bin
+
 
 def process_pq(pq_list, the_type):
     '''
@@ -72,6 +75,51 @@ def process_pq(pq_list, the_type):
 
 
 def dump_bin(filename, varname, tracktype, outname):
+    '''
+       establishes the vdf using vdfcreate and the coordinates 
+       from the parquet files, then pulls data from zarr files
+       to populate the vdf with data using raw2vdf
+       
+       Parameters
+       ----------
+
+       these are required to be inputted from the command line
+       when calling the script
+
+       filename: string
+          name of the json file containing the metadata
+       
+       varname: string
+          name of the LES variable to be visualized (e.g. QN, W, TR01)
+
+       tracktype: string
+          cloud tracking type (e.g. core, condensed, plume)
+
+       outname: string
+          name of the outputted vdf file
+
+       Returns
+       -------
+
+       xvals.txt: txt file
+          txt file containing the x coordinates of the vdf
+
+       yvals.txt: txt file
+          txt file containing the y coordinates of the vdf
+
+       zvals.txt: txt file
+          txt file containing the z coordinates of the vdf
+
+       temp.bin: binary file
+          binary file used in establishing the memory map for raw2vdf
+
+       outname_cloud_id.vdf: Vapor data format file
+          the vdf file to be loaded and visualized in Vapor
+
+       outname_cloud_id_data: directory
+          directory containing the data to be read into Vapor using the vdf file
+    '''
+
     meters2km = 1.e-3
     print(filename)
     with open(filename, 'r') as f:
