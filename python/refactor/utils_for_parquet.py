@@ -1,11 +1,10 @@
 '''
-   script for refactoring/working with parquet files (more details to come later)
+   tools for refactoring/working with parquet files (more details to come later)
 '''
 
 import pyarrow.parquet as pq
-import numpy as np
 from collections import defaultdict
-
+import numpy as np
 
 def process_pq(pq_list, the_type):
     '''
@@ -16,13 +15,29 @@ def process_pq(pq_list, the_type):
     ----------
 
     pq_list: list of parquet files
-             the list of parquet files for processing
+        the list of parquet files for processing
 
     the_type: string
-              cloud tracking type (condensed, core, etc.)
+        cloud tracking type (e.g. condensed, core, plume)
 
     Returns
     -------
+
+    full: dictionary
+        dictionary containing all of the coordinates from the pq files
+        for each timestep
+
+    sub: dictionary
+        dictionary containing the coordinates of the inputted tracking type
+        and also the 3D minima and maxima of these coordinates
+        for each timestep
+
+    c_id: float
+        the LES id number of the cloud taken from the parquet files
+
+    extrema: dictionary
+        dictionary containing the 3D absolute maximum and minimum coordinates
+        from the parquet files for each timestep
     '''
 
     keys = {
