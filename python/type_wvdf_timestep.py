@@ -239,7 +239,11 @@ def dump_bin(filename, varname, tracktype, outname):
         print(status2, output2)
     return out_name, string_shape
 
-if __name__ == "__main__":
+
+def make_parser():
+    '''
+    command line arguments for calling program
+    '''
     linebreaks = argparse.RawTextHelpFormatter
     descrip = __doc__.lstrip()
     parser = argparse.ArgumentParser(description=descrip,
@@ -249,10 +253,22 @@ if __name__ == "__main__":
     parser.add_argument('-v', '--varname', dest='varname', help='name of 3d variable', required=True)
     parser.add_argument('-t', '--tracktype', dest='tracktype', help='name of the type of cloud to visualize (e.g. core, condensed)', required=True)
     parser.add_argument('-o', '--outname', dest='outname', help='name of the outputted vdf file', required=True)
-    args = parser.parse_args()
-if os.path.isdir(args.cloud_json):
-    json_filelist = sorted(glob.glob(f'{args.cloud_json}/*.json'))
-    for j in json_filelist:
-        binfile, rev_shape = dump_bin(j, args.varname, args.tracktype, args.outname)
-else:
-    binfile, rev_shape = dump_bin(args.cloud_json, args.varname, args.tracktype, args.outname)
+    return parser
+
+
+def main(args=None):
+    '''
+    args are required
+    '''
+    parser = make_parser()
+    args = parser.parse_args(args)
+    if os.path.isdir(args.cloud_json):
+        json_filelist = sorted(glob.glob(f'{args.cloud_json}/*.json'))
+        for j in json_filelist:
+            binfile, rev_shape = dump_bin(j, args.varname, args.tracktype, args.outname)
+    else:
+        binfile, rev_shape = dump_bin(args.cloud_json, args.varname, args.tracktype, args.outname)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
