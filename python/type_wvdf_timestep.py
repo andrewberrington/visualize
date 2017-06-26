@@ -1,8 +1,6 @@
 '''
-    convert an LES zarr file to a raw binary file for vapor
-    and write out a script that will turn that file into vapor vdf
-    (uses parquet files containing 3D coordinates to establish the domain)
-    example usage: python type_wvdf_timestep.py -json 16936.json -v QN -t condensed -o QN_condensed
+    convert an LES zarr file to a raw binary file for vapor and turn that file into vapor vdf (using parquet files to establish coordinates)
+    example: python type_wvdf_timestep.py -json 16936.json -v QN -t condensed -o QN_condensed
 '''
 import zarr
 import pyarrow.parquet as pq
