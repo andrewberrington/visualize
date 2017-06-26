@@ -5,11 +5,11 @@
 import json
 import glob
 import argparse
-# import sys
+import sys
 import numpy as np
 
 
-def main(args):
+def write_json(args):
     '''
        create and populate a json file containing the paths to the vdfcreate and
        raw2vdf command line tools from VAPOR as well as the names of the parquet
@@ -68,7 +68,11 @@ def main(args):
     with open(f'{args.json_name}.json', 'w') as f:
         json.dump(the_dict, f, indent=4)
 
-if __name__ == "__main__":
+
+def make_parser():
+    '''
+    command line arguments for calling program
+    '''
     linebreaks = argparse.RawTextHelpFormatter
     descrip = __doc__.lstrip()
     parser = argparse.ArgumentParser(description=descrip,
@@ -77,5 +81,17 @@ if __name__ == "__main__":
     parser.add_argument('-pdir', '--parqdir', dest='parqdir', help='path to directory containing the parquet files', required=True)
     parser.add_argument('-zdir', '--zarrdir', dest='zarrdir', help='path to directory containing the zarr files', required=True)
     parser.add_argument('-j', '--json_name', dest='json_name', help='name of outputted json file', required=True)
-    args = parser.parse_args()
-main(args)
+    return parser
+
+
+def main(args=None):
+    '''
+    args are required
+    '''
+    parser = make_parser()
+    args = parser.parse_args(args)
+    write_json(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
