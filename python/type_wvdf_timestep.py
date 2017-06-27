@@ -246,10 +246,10 @@ def make_parser():
     descrip = __doc__.lstrip()
     parser = argparse.ArgumentParser(description=descrip,
                                      formatter_class=linebreaks)
-    parser.add_argument('-json', '--cloud_json', dest='cloud_json', help='json file or directory of json files with lists of parquet and zarr files', required=True)
+    parser.add_argument('-j', '--c_json', dest='cloud_json', help='json file or directory of json files with lists of parquet and zarr files', required=True)
     # parser.add_argument('-res', '--resolution', dest='resolution', help='resolution of the data in meters', required=True)
     parser.add_argument('-v', '--varname', dest='varname', help='name of 3d variable', required=True)
-    parser.add_argument('-t', '--tracktype', dest='tracktype', help='name of the type of cloud to visualize (e.g. core, condensed)', required=True)
+    parser.add_argument('-t', '--trackt', dest='tracktype', help='name of the type of cloud to visualize (e.g. core, condensed)', required=True)
     parser.add_argument('-o', '--outname', dest='outname', help='name of the outputted vdf file', required=True)
     return parser
 

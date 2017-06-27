@@ -1,4 +1,5 @@
 '''
+    create a json file containing metadata to pass to a vdf writer
     example:  python write_vdf_meta_pq.py -os linux -pdir /mnt/datatmp/visualize/andrew/cloud_11872/11872 -zdir /mnt/datatmp/visualize/andrew/bomex_zarr -j 11872
 '''
 
@@ -78,9 +79,9 @@ def make_parser():
     parser = argparse.ArgumentParser(description=descrip,
                                      formatter_class=linebreaks)
     parser.add_argument('-os', '--op_sys', dest='os', help='operating system (eg. linux, mac)', required=True)
-    parser.add_argument('-pdir', '--parqdir', dest='parqdir', help='path to directory containing the parquet files', required=True)
-    parser.add_argument('-zdir', '--zarrdir', dest='zarrdir', help='path to directory containing the zarr files', required=True)
-    parser.add_argument('-j', '--json_name', dest='json_name', help='name of outputted json file', required=True)
+    parser.add_argument('-pdir', '--pqdir', dest='parqdir', help='path to directory containing the parquet files', required=True)
+    parser.add_argument('-zdir', '--zrdir', dest='zarrdir', help='path to directory containing the zarr files', required=True)
+    parser.add_argument('-j', '--j_name', dest='json_name', help='name of outputted json file', required=True)
     return parser
 
 
