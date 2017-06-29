@@ -16,11 +16,11 @@ def calc_rv(z):
 	   z: zarr file
 	      file containing the QV variable
 
-       Returns
-       -------
+	   Returns
+	   -------
 
-       rv: array-like
-           array of vapor mixing ratios in kg/kg
+	   rv: array-like
+	       array of vapor mixing ratios in kg/kg
 	'''
 	rv = (z['QV'][:][0]/1.e3) / (1 - (z['QV'][:][0]/1.e3))
 	return rv
@@ -37,11 +37,11 @@ def calc_rl(z):
 	   z: zarr file
 	      file containing the QN variable
 
-       Returns
-       -------
+	   Returns
+	   -------
 
-       rl: array-like
-           array of liquid water mixing ratios in kg/kg
+	   rl: array-like
+	       array of liquid water mixing ratios in kg/kg
 	'''
 	rl = (z['QN'][:][0]/1.e3) / (1 - (z['QN'][:][0]/1.e3))
 	return rl
@@ -139,9 +139,8 @@ def calc_Tv(z):
 	       array of virtual temperatures in K
 	'''
 	lam = 0.61
-
-    rv = calc_rv(z)
-    rl = calc_rl(z)
+	rv = calc_rv(z)
+	rl = calc_rl(z)
 	Tv = z['TABS'][:][0] * (1. + lam * (rv - rl))
 	return Tv
 
