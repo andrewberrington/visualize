@@ -195,7 +195,16 @@ def dump_bin(filename, varname, tracktype, outname):
             # startx, stopx = x_indices[0], x_indices[1]
             # starty, stopy = y_indices[0], y_indices[1]
             # extra slice 0 is there to remove the time dimension from the zarr data
-            var_data = the_in[varname][:][0]
+            if varname == 'r':
+                import calc_vars as cv
+                # get mixing ratio in kg/kg
+                var_data = cv.mix_r(the_in)
+            elif varname == 'TD':
+                import calc_vars as cv
+                # get dewpoints in K
+                var_data = cv.calc_td(the_in)
+            else:
+                var_data = the_in[varname][:][0]
             x_r = subdict[('x', 'sub')][t_step]
             y_r = subdict[('y', 'sub')][t_step]
             z = subdict[('z', 'sub')][t_step]
