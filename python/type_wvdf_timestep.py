@@ -198,11 +198,21 @@ def dump_bin(filename, varname, tracktype, outname):
             if varname == 'rv':
                 import calc_vars as cv
                 # get vapor mixing ratio in kg/kg
-                var_data = cv.calc_rv(the_in)
+                qv = the_in['QV']
+                var_data = cv.calc_rv(qv)
             elif varname == 'td':
                 import calc_vars as cv
                 # get dewpoints in K
-                var_data = cv.calc_Td(the_in)
+                qv = the_in['QV']
+                press = the_in['p']
+                var_data = cv.calc_Td(qv, press)
+            elif varname == 'buoy':
+                import calc_vars as cv
+                #get buoyancy factor in m/s^2
+                qv = the_in['QV']
+                qn = the_in['QN']
+                temp = the_in['TABS']
+                var_data = cv.calc_buoy(qv, qn, temp)
             else:
                 var_data = the_in[varname][:][0]
             x_r = subdict[('x', 'sub')][t_step]

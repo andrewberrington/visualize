@@ -5,7 +5,7 @@
 import numpy as np
 
 
-def calc_rv(z):
+def calc_rv(qv):
 	'''
 	   get vapor mixing ratio in kg/kg from zarr QV
 	   (adopted from Z. Ming ATSC 405 libs)
@@ -13,8 +13,8 @@ def calc_rv(z):
 	   Parameters
 	   ----------
 
-	   z: zarr file
-	      file containing the QV variable
+	   qv: array-like
+	       array of vapor specific humidities in g/kg
 
 	   Returns
 	   -------
@@ -22,11 +22,11 @@ def calc_rv(z):
 	   rv: array-like
 	       array of vapor mixing ratios in kg/kg
 	'''
-	rv = (z['QV'][:][0]/1.e3) / (1 - (z['QV'][:][0]/1.e3))
+	rv = (qv[:][0]/1.e3) / (1 - (qv[:][0]/1.e3))
 	return rv
 
 
-def calc_rl(z):
+def calc_rl(qn):
 	'''
 	   get liquid water mixing ratio in kg/kg from zarr QN
 	   (adopted from Z. Ming ATSC 405 libs)
@@ -34,8 +34,8 @@ def calc_rl(z):
 	   Parameters
 	   ----------
 
-	   z: zarr file
-	      file containing the QN variable
+	   qn: array-like
+	       array of liquid water specific humidities in g/kg
 
 	   Returns
 	   -------
@@ -43,19 +43,22 @@ def calc_rl(z):
 	   rl: array-like
 	       array of liquid water mixing ratios in kg/kg
 	'''
-	rl = (z['QN'][:][0]/1.e3) / (1 - (z['QN'][:][0]/1.e3))
+	rl = (qn[:][0]/1.e3) / (1 - (qn[:][0]/1.e3))
 	return rl
 
 
-def calc_rt(z):
+def calc_rt(qv, qn):
 	'''
 	   get total water mixing ratio in kg/kg from zarr
 
 	   Parameters
 	   ----------
 
-	   z: zarr file
-	      file containing the variables
+	   qv: array-like
+	       array of vapor specific humidities in g/kg
+
+	   qn: array-like
+	       array of liquid water specific humidities in g/kg
 
 	   Returns
 	   -------
@@ -63,11 +66,11 @@ def calc_rt(z):
 	   rt: array-like
 	       array of total water mixing ratios in kg/kg
 	'''
-	rt = calc_rv(z) + calc_rl(z)
+	rt = calc_rv(qv) + calc_rl(qn)
 	return rt
 
 
-def calc_Td(z):
+def calc_Td(qv, p):
 	'''
 	   get dewpoint temperature in K from zarr p and QV
 	   (adopted from find_Td in ATSC 405 libs)
@@ -75,8 +78,11 @@ def calc_Td(z):
 	   Parameters
 	   ----------
 
-	   z: zarr file
-	      file containing the variables
+	   qv: array-like
+	       array of vapor specific humidities in g/kg
+
+	   p: array-like
+	      array of pressures in hPa
 
 	   Returns
 	   -------
@@ -84,8 +90,8 @@ def calc_Td(z):
 	   Td: array-like
 	       array of dewpoint temperatures in K
 	'''
-	rv = calc_rv(z)
-	press = z['p'][:] * 1.e2
+	rv = calc_rv(qv)
+	press = p[:] * 1.e2
 	e = rv * press[:, None, None] / (0.622 + rv)
 	denom = (17.67 / np.log(e / 611.2)) - 1.
 	Td = 243.5 / denom
@@ -93,7 +99,7 @@ def calc_Td(z):
 	return Td
 
 
-def calc_theta(z):
+def calc_theta(p, t):
 	'''
 	   get theta in K from zarr TABS and p
 	   (adopted from Loren's script)
@@ -101,8 +107,11 @@ def calc_theta(z):
 	   Parameters
 	   ----------
 
-	   z: zarr file
-	      file containing the variables
+	   p: array-like
+	      array of pressures in hPa
+
+	   t: array-like
+	      array of temperatures in K
 
 	   Returns
 	   -------
@@ -116,12 +125,12 @@ def calc_theta(z):
 	Lv = 2.5104e6
 	lam = 0.61
 
-	press = z['p'][:] * 1.e2
-	theta = z['TABS'][:][0] * (1.e5 / press[:, None, None])**(Rd / cp)
+	press = p[:] * 1.e2
+	theta = t[:][0] * (1.e5 / press[:, None, None])**(Rd / cp)
 	return theta
 
 
-def calc_Tv(z):
+def calc_Tv(qv, qn, t):
 	'''
 	   get virtual temperature in K from zarr variables
 	   (adopted from Loren's script)
@@ -129,8 +138,14 @@ def calc_Tv(z):
 	   Parameters
 	   ----------
 
-	   z: zarr file
-	      file containing the variables
+	   qv: array-like
+	       array of vapor specific humidities in g/kg
+
+	   qn: array-like
+	       array of liquid water specific humidities in g/kg
+
+	   t: array-like
+	      array of temperatures in K
 
 	   Returns
 	   -------
@@ -139,21 +154,30 @@ def calc_Tv(z):
 	       array of virtual temperatures in K
 	'''
 	lam = 0.61
-	rv = calc_rv(z)
-	rl = calc_rl(z)
-	Tv = z['TABS'][:][0] * (1. + lam * (rv - rl))
+	rv = calc_rv(qv)
+	rl = calc_rl(qn)
+	Tv = t[:][0] * (1. + lam * (rv - rl))
 	return Tv
 
 
-def calc_thetav(z):
+def calc_thetav(qv, qn, p, t):
 	'''
 	   get the virtual potential temperature in K from zarr variables
 
 	   Parameters
 	   ----------
 
-	   z: zarr file
-	      file containing the variables
+	   qv: array-like
+	       array of vapor specific humidities in g/kg
+
+	   qn: array-like
+	       array of liquid water specific humidities in g/kg
+
+	   t: array-like
+	      array of temperatures in K
+
+	   p: array-like
+	      array of pressures in hPa
 
 	   Returns
 	   -------
@@ -163,33 +187,38 @@ def calc_thetav(z):
 	'''
 	lam = 0.61
 
-	rv = calc_rv(z)
-	rl = calc_rl(z)
-	theta = calc_theta(z)
+	rv = calc_rv(qv)
+	rl = calc_rl(qn)
+	theta = calc_theta(p, t)
 	theta_v = theta * (1. + lam * (rv - rl))
 	return theta_v
 
 
-def calc_buoy(z):
+def calc_buoy(qv, qn, t):
 	'''
-	   get buoyancy in m/s^2 from zarr variables
+	   get buoyancy factor in m/s^2 from zarr variables
 
 	   Parameters
 	   ----------
 
-	   z: zarr file
-	      file containing the variables
+	   qv: array-like
+	       array of vapor specific humidities in g/kg
+
+	   qn: array-like
+	       array of liquid water specific humidities in g/kg
+
+	   t: array-like
+	      array of temperatures in K
 	   
 	   Returns
 	   -------
 
 	   buoyancy: array-like
-	             array of buoyancies in m/s^2 
+	             array of buoyancy factors in m/s^2 
 	'''
 	g_0 = 9.81 # m/s^2
 
-	theta = calc_theta(z)
-	theta_v = calc_thetav(z)
-	theta_v_mean = np.nanmean(theta_v, axis=(1, 2))
-	buoyancy = g_0 * ((theta / theta_v_mean) - 1)
+	Tv = calc_Tv(qv, qn, t)
+	Tv_mean = np.nanmean(Tv, axis=(1, 2))
+	buoyancy = g_0 * ((Tv - Tv_mean[:, None, None]) / Tv_mean[:, None, None])
 	return buoyancy
