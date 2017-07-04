@@ -70,11 +70,11 @@ def test_theta():
 	   p in hPa and temp in K
 	'''
 
-	cp = 1004
-	Rv = 461.
-	Rd = 287.
-	Lv = 2.5104e6
-	lam = 0.61
+	cp = 1004 # J/kg/K
+	Rv = 461. # J/kg/K
+	Rd = 287. # J/kg/K
+	Lv = 2.5104e6 # J/kg
+	lam = 0.61 # kg/kg
 
 	press = np.array([1.e3, 9.5e2, 9.e2])
 	press = press * 1.e2
@@ -91,7 +91,7 @@ def test_Tv():
 	   rl, rv in kg/kg, temp in K
 	'''
 
-	lam = 0.61
+	lam = 0.61 # kg/kg
 
 	the_rls = np.array([0.0005, 0.0010, 0.0015])
 	the_rvs = np.array([0.0152, 0.0163, 0.0173])
@@ -108,11 +108,11 @@ def test_thetav():
 	   rl, rv in kg/kg, temp in K, p in hPa
 	'''
 
-	cp = 1004
-	Rv = 461.
-	Rd = 287.
-	Lv = 2.5104e6
-	lam = 0.61
+	cp = 1004 # J/kg/K
+	Rv = 461. # J/kg/K
+	Rd = 287. # J/kg/K
+	Lv = 2.5104e6 # J/kg
+	lam = 0.61 # kg/kg
 
 	press = np.array([1.e3, 9.5e2, 9.e2])
 	press = press * 1.e2

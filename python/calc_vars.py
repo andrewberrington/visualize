@@ -119,11 +119,11 @@ def calc_theta(p, t):
 	   theta: array-like
 	          array of theta in K
 	'''
-	cp = 1004
-	Rv = 461.
-	Rd = 287.
-	Lv = 2.5104e6
-	lam = 0.61
+	cp = 1004 # J/kg/K
+	Rv = 461. # J/kg/K
+	Rd = 287. # J/kg/K
+	Lv = 2.5104e6 # J/kg
+	lam = 0.61 # kg/kg
 
 	press = p[:] * 1.e2
 	theta = t[:][0] * (1.e5 / press[:, None, None])**(Rd / cp)
@@ -153,7 +153,7 @@ def calc_Tv(qv, qn, t):
 	   Tv: array-like
 	       array of virtual temperatures in K
 	'''
-	lam = 0.61
+	lam = 0.61 # kg/kg
 	rv = calc_rv(qv)
 	rl = calc_rl(qn)
 	Tv = t[:][0] * (1. + lam * (rv - rl))
@@ -185,7 +185,7 @@ def calc_thetav(qv, qn, p, t):
 	   theta_v: array-like
 	            array of virtual potential temperatures in K
 	'''
-	lam = 0.61
+	lam = 0.61 # kg/kg
 
 	rv = calc_rv(qv)
 	rl = calc_rl(qn)
