@@ -27,7 +27,7 @@ def sort_parq(filename):
 
 
 def make_ddf(args):
-        pool = ThreadPool(processes=18)
+        pool = ThreadPool(processes=int(args.thread_num))
         file_list=list(glob.glob(f'{args.directory}/*.parq'))
         file_list.sort(key=sort_parq)
         select = []
@@ -58,6 +58,7 @@ def make_parser():
     parser.add_argument('-d', '--dir', dest='directory', help='path to directory containing parquet files', required=True)
     parser.add_argument('-ts', '--tstep', dest='timestep', help='timestep to pull from parquet files', type=str, required=True)
     parser.add_argument('-n', '--num', dest='number', help='number of parquet files to pull from given timestep', type=str, required=True)
+    parser.add_argument('-th' '--threads', dest='thread_num', help='number of threads for thread pool', type=str, required=True)
     return parser
 
 
