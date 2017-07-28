@@ -5,10 +5,12 @@ import matplotlib.pyplot as plt
 import glob
 import sys
 import coord_to_zyx as ctz
-global new_coords
+global new_x
+global new_y
 global ix, iy
 
-new_coords = []
+new_x = []
+new_y = []
 
 plt.ion()
 
@@ -84,11 +86,16 @@ def onclick(event):
 	global ix, iy
 	ix, iy = event.xdata, event.ydata
 
-	global new_coords
-	new_coords.append((int(ix), int(iy)))
+	global new_x
+	new_x.append(int(ix))
+	
+	global new_y
+	new_y.append(int(iy))
 
-	if len(new_coords) == 4:
-		print(f'finished, x,y coordinates of new subsetted region are: {new_coords}')
+	if len(new_y) == 4:
+		print(f'finished, x coordinates of new subsetted region are: {new_x}')
+		print(f'finished, y coordinates of new subsetted region are: {new_y}')
+		print(f'variable names are new_x and new_y')
 		fig.canvas.mpl_disconnect(cid)
 		plt.close(1)
 	return
